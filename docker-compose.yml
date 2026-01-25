@@ -1,0 +1,105 @@
+version: "3.8"
+
+name: dydoctor-system
+
+services:
+  # OpenGauss 数据库服务
+  opengauss:
+    image: opengauss/opengauss:latest
+    container_name: yudao-opengauss
+    restart: unless-stopped
+    environment:
+      GS_USER: omm
+      GS_PASSWORD: Yudao@2024
+      GS_PORT: 5432
+      GS_DB: postgres
+      GS_MODE: single
+      GS_ENCODING: UTF-8
+    ports:
+      - "5432:5432"
+    volumes:
+      - opengauss-data:/var/lib/opengauss/data
+      - ./scripts/healthcheck-opengauss.sh:/healthcheck-opengauss.sh:ro
+      # 挂载数据库初始化脚本
+      - ./ruoyi-vue-pro-master-jdk17/sql/opengauss/00-create-user.sql:/docker-entrypoint-initdb.d/00-create-user.sql:ro
+      - ./ruoyi-vue-pro-master-jdk17/sql/opengauss/ruoyi-vue-pro.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./ruoyi-vue-pro-master-jdk17/sql/opengauss/quartz.sql:/docker-entrypoint-initdb.d/02-quartz.sql:ro
+      - ./ruoyi-vue-pro-master-jdk17/sql/opengauss/ai-opengauss.sql:/docker-entrypoint-initdb.d/03-ai.sql:ro
+    healthcheck:
+      test: ["CMD", "sh", "/healthcheck-opengauss.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - dydoctor-network
+
+  # Redis 缓存服务
+  redis:
+    image: redis:8.4-alpine
+    container_name: yudao-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - dydoctor-network
+
+  yudao-server:
+    build:
+      context: ./ruoyi-vue-pro-master-jdk17
+      dockerfile: yudao-server/Dockerfile
+    image: yudao-server:local
+    container_name: yudao-server
+    restart: unless-stopped
+    ports:
+      - "48080:48080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      JAVA_OPTS: "-Xms512m -Xmx512m -Djava.security.egd=file:/dev/./urandom"
+      ARGS: >
+        --spring.datasource.dynamic.datasource.master.url=jdbc:postgresql://opengauss:5432/postgres?useSSL=false&serverTimezone=Asia/Shanghai
+        --spring.datasource.dynamic.datasource.master.username=yudao
+        --spring.datasource.dynamic.datasource.master.password=Yudao@2024
+        --spring.datasource.dynamic.datasource.slave.url=jdbc:postgresql://opengauss:5432/postgres?useSSL=false&serverTimezone=Asia/Shanghai
+        --spring.datasource.dynamic.datasource.slave.username=yudao
+        --spring.datasource.dynamic.datasource.slave.password=Yudao@2024
+        --spring.data.redis.host=redis
+    depends_on:
+      opengauss:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dydoctor-network
+
+  yudao-ui-admin-vue3:
+    build:
+      context: ./yudao-ui-admin-vue3-master
+      dockerfile: Dockerfile
+    image: yudao-ui-admin-vue3:local
+    container_name: yudao-ui-admin-vue3
+    restart: unless-stopped
+    ports:
+      - "18080:80"
+    depends_on:
+      - yudao-server
+    networks:
+      - dydoctor-network
+
+volumes:
+  opengauss-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  dydoctor-network:
+    driver: bridge
