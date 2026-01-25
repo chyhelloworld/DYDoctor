@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker:*)",
+      "mcp__web-reader__webReader",
+      "Bash(findstr:*)",
+      "mcp__web-search-prime__webSearchPrime",
+      "Bash(docker.exe ps:*)",
+      "Bash(docker.exe logs:*)",
+      "Bash(docker.exe volume:*)",
+      "Bash(docker.exe compose:*)",
+      "Bash(docker.exe exec:*)",
+      "Bash(docker.exe inspect:*)",
+      "Bash(docker.exe port:*)",
+      "Bash(chmod:*)",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"\\(Get-Content ''E:\\\\github\\\\DYDoctor\\\\ai-mysql.sql''\\).Count\")",
+      "Bash(python convert_mysql_to_opengauss.py:*)",
+      "Bash(python:*)"
+    ]
+  }
+}

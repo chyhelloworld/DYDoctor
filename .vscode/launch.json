@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "启动 YudaoServer",
+            "request": "launch",
+            "mainClass": "cn.iocoder.yudao.server.YudaoServerApplication",
+            "projectName": "yudao-server",
+            "args": "--spring.profiles.active=local",
+            "vmArgs": "-Xms512m -Xmx1024m",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "local"
+            }
+        }
+    ]
+}
