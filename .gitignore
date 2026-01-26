@@ -13,3 +13,4 @@ target/
 
 # 依赖目录（如果使用 Maven/Gradle）
 node_modules/
+target/
