@@ -1,2 +1,15 @@
-.worktrees/
+# Java 构建产物
+target/
 *.jar
+*.war
+*.ear
+
+# IDE 配置
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# 依赖目录（如果使用 Maven/Gradle）
+node_modules/
